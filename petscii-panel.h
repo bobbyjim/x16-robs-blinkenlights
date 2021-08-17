@@ -8,8 +8,8 @@
 #define VERT            221
 #define HORIZ           192
 
-#define CIRCLE_FILLED   209
-#define CIRCLE_OPEN     215
+#define CIRCLE_FILLED   113
+#define CIRCLE_OPEN     119
 #define LED_OFF         COLOR_BLACK
 // #define LED_OFF  COLOR_GRAY1
 

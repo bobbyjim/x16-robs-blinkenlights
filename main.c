@@ -4,8 +4,29 @@
 #include <cx16.h>
 #include <time.h>
 #include <stdlib.h>
+#include <joystick.h>
 
 #include "petscii-panel.h"
+
+#define TIMEPANEL_TOP           6
+#define TIMEPANEL_LEFT          8
+#define TIMEPANEL_BOTTOM        TIMEPANEL_TOP  + 12
+#define TIMEPANEL_RIGHT         TIMEPANEL_LEFT + 27
+
+#define IOPANEL_TOP             26
+#define IOPANEL_LEFT            8
+#define IOPANEL_BOTTOM          IOPANEL_TOP + 28
+#define IOPANEL_RIGHT           IOPANEL_LEFT + 27
+
+#define STACKPANEL_TOP          6
+#define STACKPANEL_LEFT         45
+#define STACKPANEL_BOTTOM       STACKPANEL_TOP  + 32
+#define STACKPANEL_RIGHT        STACKPANEL_LEFT + 27
+
+#define KERNAL_TOP              46
+#define KERNAL_LEFT             45
+#define KERNAL_BOTTOM           KERNAL_TOP + 8
+#define KERNAL_RIGHT            KERNAL_LEFT + 27
 
 char* labels_stack[] = {
     "01d5", "01d6", "01d7", "01d8", "01d9", "01da", "01db", "01dc", "01dd", "01de", "01df", 
@@ -54,20 +75,7 @@ struct timespec ts;
    clock_settime(CLOCK_REALTIME, &ts);
 */
 
-#define TIMEPANEL_TOP           6
-#define TIMEPANEL_LEFT          8
-#define TIMEPANEL_BOTTOM        TIMEPANEL_TOP  + 12
-#define TIMEPANEL_RIGHT         TIMEPANEL_LEFT + 27
-
-#define IOPANEL_TOP             26
-#define IOPANEL_LEFT            8
-#define IOPANEL_BOTTOM          IOPANEL_TOP + 28
-#define IOPANEL_RIGHT           IOPANEL_LEFT + 27
-
-#define STACKPANEL_TOP          6
-#define STACKPANEL_LEFT         45
-#define STACKPANEL_BOTTOM       STACKPANEL_TOP  + 48
-#define STACKPANEL_RIGHT        STACKPANEL_LEFT + 27
+unsigned char delay = 0;
 
 void timePanel()
 {
@@ -104,7 +112,29 @@ void stackPanel()
     for(x=0; x<16; ++x)
         elems[x] = *(unsigned char *) address_stack[x];
 
-    LED_set(16, 3, COLOR_RED, STACKPANEL_LEFT, STACKPANEL_TOP, elems, labels_stack);
+    LED_set(16, 2, COLOR_RED, STACKPANEL_LEFT, STACKPANEL_TOP, elems, labels_stack);
+}
+
+void keyboard()
+{   
+   if (kbhit())
+   {
+      LED_bar( KERNAL_LEFT, KERNAL_TOP, cgetc(), COLOR_GREEN, "kbd" );
+      delay = 3;
+      _randomize();
+   }
+   else 
+   {
+       if (delay > 0) 
+          --delay;
+       else
+          LED_bar( KERNAL_LEFT, KERNAL_TOP, 0, COLOR_GREEN, "kbd" );
+   }
+}
+
+void status()
+{
+    LED_bar( KERNAL_LEFT, KERNAL_TOP + 2, cbm_k_readst(), COLOR_YELLOW, "st" );
 }
 
 void main(void)
@@ -122,6 +152,7 @@ void main(void)
    panel(STACKPANEL_TOP-4,STACKPANEL_LEFT-4,STACKPANEL_BOTTOM+2,STACKPANEL_RIGHT+2);
    panel(TIMEPANEL_TOP-4,TIMEPANEL_LEFT-4,TIMEPANEL_BOTTOM+2,TIMEPANEL_RIGHT+2);
    panel(IOPANEL_TOP-4, IOPANEL_LEFT-4, IOPANEL_BOTTOM+2, IOPANEL_RIGHT+2);
+   panel(KERNAL_TOP-4, KERNAL_LEFT-4, KERNAL_BOTTOM+2, KERNAL_RIGHT+2);
 
    _randomize();
 
@@ -130,6 +161,9 @@ void main(void)
       timePanel();
       ioPanel();
       stackPanel();
+      keyboard();
+      status();
+
       sleep(1);
    }
 }

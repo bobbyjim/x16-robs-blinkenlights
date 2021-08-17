@@ -34,9 +34,8 @@ void LED( unsigned char color )
 
 void LED_off()
 {
-   //textcolor(COLOR_GRAY1);
-   cputs("  ");
-   //cputc(CIRCLE_FILLED);
+   cputc( ' ' ); 
+   cputc( ' ' ); 
 }
 
 void LED_bar( unsigned char x, unsigned char y, unsigned char val, unsigned char ledColor, char* label )
