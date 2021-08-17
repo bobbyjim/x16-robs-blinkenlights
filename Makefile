@@ -1,4 +1,4 @@
-SOURCES = main.c 
+SOURCES = main.c petscii-panel.c
 
 PROGRAM = BLINKENLIGHTS
 
