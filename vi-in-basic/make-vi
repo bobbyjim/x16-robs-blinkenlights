@@ -1,0 +1,2 @@
+cat main-vi.list > vi.tmp
+perl ../module-basic/basic-labelmaster.pl vi.tmp > vi.bas

@@ -1,0 +1,95 @@
+color 8,0: ? chr$(147)
+b$=chr$(19): rem + 59 down cursor
+for x=1 to 59: b$=b$+chr$(17) :next
+
+longvar \mode
+longvar \buffer
+longvar \status
+longvar \filename
+longvar \xvi
+
+\mode    = 1
+\xvi$ = "xvi  "
+dim \buffer$(256)
+
+rem --------------
+rem
+rem  mode switch
+rem 
+rem --------------
+{:mode switch}
+? b$ "                  ";
+on \mode goto {:edit loop}, {:command loop}
+
+rem --------------
+rem
+rem  status line
+rem 
+rem --------------
+{:status line}
+? "\x0a" b$ "xvi  " spc(50) "input     \x5f command mode" chr$(19) chr$(146);
+return
+
+rem --------------
+rem
+rem  edit mode
+rem 
+rem --------------
+{:edit loop} 
+gosub {:status line}
+{:edit get loop}
+get a$ :if a$="" goto {:edit get loop}
+if a$=chr$(95) then \mode=2 :goto {:mode switch}
+if a$=chr$($14) then bf$=left$(len(bf$)-1) :goto {:print buffer}
+bf$=bf$+a$
+{:print buffer}
+? bf$;
+goto {:edit loop}
+
+rem --------------
+rem
+rem  command mode
+rem 
+rem --------------
+{:command loop}
+? b$ "           ";
+? "                                                                    ";
+? b$ "xvi: ";
+ac$=""
+{:command get loop}
+get a$: if a$="" goto {:command get loop}
+if a$=chr$(13) then gosub {:interpret} :goto {:mode switch}
+? a$; :ac$=ac$+a$ :goto {:command get loop}
+
+rem -------------------
+rem
+rem command interpreter
+rem
+rem -------------------
+{:interpret}
+if left$(ac$,2)="vi" then \mode=1
+if left$(ac$,1)="e"  then \mode=1
+if left$(ac$,1)="q"  then end
+if left$(ac$,1)="s"  then gosub {:save}
+return
+
+rem -------------------
+rem
+rem save
+rem
+rem -------------------
+{:save}
+if mid$(ac$,2,1)<>" " then \status$ = "input (err)":\mode=1:return
+\filename$ = ""
+p=2
+{:skip whitespace}
+if mid$(ac$,p,1)=" " then p=p+1 :goto {:skip whitespace}
+q=p+1
+{:read filename}
+;if mid$(ac$,q,1)<> " " then q=q+1 :goto {:read filename}
+\filename$ = mid$(ac$,p)
+? "filename: " \filename$
+end
+
+
+
