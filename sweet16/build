@@ -1,0 +1,2 @@
+cl65 --start-addr 0x0443 -t cx16 sweet16.s   -C cx16-asm.cfg -o SWEET16.PRG
+cl65 --start-addr 0x0400 -t cx16 kungpao16.s -C cx16-asm.cfg -o KP16.PRG

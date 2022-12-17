@@ -33,5 +33,11 @@ It has X-16 sprites, and mimics the old sales pitch for the C64.
 # kernal-test
 A little C program that tests KERNAL routines.
 
+# print-hex
+6502 assembly to print a byte value in hexadecimal.
+
 # robsos
 A small DMS-SOS emulator (an old Nortel switch operating system).
+
+# sweet16
+SWEET16 for the Commander X16
