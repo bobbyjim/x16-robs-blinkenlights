@@ -1,3 +1,6 @@
+# banner
+An assembly language routine which prints "banner" text using PETSCII.
+
 # blinkenlights
 
 Displays some of the interesting memory locations of the X16 as groups of "LED" bits.
