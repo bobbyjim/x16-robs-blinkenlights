@@ -17,6 +17,7 @@ typedef struct {
     //  82 = D82
     //
 
+    char id[3];       
     char dosType[3]; // e.g. "2A"
 
     int bam_on_hdr            : 1;
@@ -60,11 +61,12 @@ void d81_init(Disk *disk);
 void d82_init(Disk *disk); 
 
 long positionAtBlock( int block );
-void getLabel(); //Disk *disk);
+void readHeader(); //Disk *disk);
 void disk_details(); //Disk *disk);
 void dumpBlock(int block);
 void dumpBAM(); //Disk *disk);
-void dumpHeader(); 
 void dumpDirectory(); //Disk *disk);
+void help();
+void dumpTrack( int track, int block );
 
 #endif

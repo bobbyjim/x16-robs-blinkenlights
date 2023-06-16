@@ -11,6 +11,9 @@
 #define LOAD_TO_VERA          2
 #define PROMPT                cprintf("\r\n%u %c ", _heapmemavail(), '%')
 
+#define  SECONDARY_LOAD_ADDRESS_R39     3
+#define  PRIMARY_LOAD_ADDRESS_R39       0x0f000
+
 void load(char *image)
 {
    RAM_BANK = 1;
@@ -36,6 +39,7 @@ int readLine()
 }
 
 int block = 0;
+int track = 1;
 
 void main()
 {
@@ -43,12 +47,11 @@ void main()
 
    cbm_k_setnam("petfont.bin");
    cbm_k_setlfs(0,8,0);
-   cbm_k_load(LOAD_TO_VERA, 0x0f800);
+   cbm_k_load(SECONDARY_LOAD_ADDRESS_R39, PRIMARY_LOAD_ADDRESS_R39);
 
    printf( "d64 shell\n\n" );
-   printf( "%cdemo.d64 to load demo.d64\n", 95 );
-   printf( "b 357 to view block 357\n" );
    printf( "d64, d67, d80, d81, and d82 supported\n" );
+   help();
 
    while(readLine())
    {
@@ -69,11 +72,19 @@ void main()
       }
       else if (lineInputBuffer[0] == 'h')
       { 
-         dumpHeader();
+         disk_details();
       }
       else if (lineInputBuffer[0] == 'd')
       {
          dumpDirectory();
+      }
+      else if (sscanf(lineInputBuffer, "t %d %d", &track, &block) == 2)
+      {
+         dumpTrack(track, block);
+      }
+      else if (lineInputBuffer[0] == '?')
+      {
+         help();
       }
    }
    //load("demo.d64");     // 22 banks 

@@ -38,6 +38,12 @@ unsigned char mapImageType(char* filename)
 
 void initImage(char* extension)
 {
+   strcpy(disk.label, "----------------");
+   strcpy(disk.formatName, "---");
+   strcpy(disk.dosType, "--");
+   strcpy(disk.id, "--");
+   disk.format = 0;
+
    switch(mapImageType(extension))
    {
         default:
@@ -48,7 +54,7 @@ void initImage(char* extension)
         case 81: d81_init(&disk); break;
         case 82: d82_init(&disk); break;
    }
-   getLabel();
+   readHeader();
 }
 
 int calculateBlock(Disk *disk, int track)
@@ -92,11 +98,13 @@ void disk_details() //Disk *disk)
 {
     int dirBlock = calculateBlock(&disk, disk.hdr_dir_track);
     
-    printf("        label : \"%16s\"\n", disk.label);
-    printf("       format : %3s\n", disk.formatName);
-    printf("          dos : %2s\n", disk.dosType);
-    printf("    dir track : %d\n", disk.hdr_dir_track);
-    printf("        block : %d\n", dirBlock);
+    printf(" ...... label: \"%s\"\n", disk.label);
+    printf(" ..........id:  %s\n", disk.id );
+    printf(" ........ dos:  %s\n", disk.dosType);
+    printf(" ..... format:  %s\n", disk.formatName);
+    printf(" ....... type:  %u\n", disk.format);
+    printf(" .. dir track:  %d\n", disk.hdr_dir_track);
+    printf(" ...dir block:  %d\n", dirBlock);
     printf("\n\n");
 }
 
@@ -108,12 +116,28 @@ void dumpTracks()
        printf("   - %d/0: %d\n", i, calculateBlock(&disk, i));
 }
 
+void help()
+{
+   printf( "? ............ this help\n" );
+   printf( "%cdemo.d64 .... loads demo.d64\n", 95 );
+   printf( "b 357 ........ views block 357\n" );
+   printf( "t 5 20 ....... views track 5, block 20\n");
+   printf( "h ............ dumps header\n");
+   printf( "d ............ dumps directory\n");
+}
+
+void dumpTrack( int track, int block )
+{
+   block = calculateBlock( &disk, track ) + block;
+   dumpBlock(block);
+}
+
 //
 //  returns the intra-bank offset for the block
 //
 long positionAtBlock( int block )
 {
-    long diskpos = 256l * block;
+    //long diskpos = 256l * block;
 
     RAM_BANK = (block / 32) + 1;
     block %= 32;
@@ -121,14 +145,20 @@ long positionAtBlock( int block )
     return -2 + 256l * block;
 }
 
-void getLabel()
+void readHeader()
 {
-    long localpos = positionAtBlock( calculateBlock( &disk, disk.hdr_dir_track ) );
+    int  block    = calculateBlock( &disk, disk.hdr_dir_track );
+    long localpos = positionAtBlock( block );
+    long address  = 0xa000 + localpos + disk.hdr_label_offset;
 
-    printf(" label offset = %d\n", 0xa000 + localpos + disk.hdr_label_offset);
+//    printf( "       block: %d\n", block );
+//    printf( "    position: $%lx\n", localpos );
+//    printf(" label offset: $%lx\n", address);
+//    printf("        label: %s\n", (char*)address);
 
-    strncpy(disk.label, (char*)BANK_RAM[ 0xa000 + localpos + disk.hdr_label_offset], 16);
-    strncpy(disk.dosType, (char*)BANK_RAM[ 0xa000 + localpos + disk.hdr_label_offset + 17], 3);
+    strncpy(disk.label,   (char*)(address), 16);
+    strncpy(disk.id,      (char*)(address + 18), 2);
+    strncpy(disk.dosType, (char*)(address + 21), 2);
 }
 
 void dumpBlock( int block )
@@ -179,15 +209,10 @@ void dumpBlock( int block )
 
 void dumpBAM()
 {
-}
-
-void dumpHeader()
-{
-    clrscr();
-    gotoxy(0, 1);
-    printf("%s %s\n", disk.label, disk.dosType);
+   printf("bam tbd\n");
 }
 
 void dumpDirectory()
 {
+   printf("directory tbd\n");
 }

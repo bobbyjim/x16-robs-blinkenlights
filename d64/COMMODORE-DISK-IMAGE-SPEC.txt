@@ -1,0 +1,38 @@
+WHAT IT IS.  An optional header block, with parametric data explaining 
+the structure of the image and important offsets.
+
+WHERE IT IS.  It's present in any disk image which is of a non-standard size.
+For example, if a .d81 file is not the correct size for a d81 image, then 
+look at the first block for the i64 custom header. If it's present, it's 
+located in the first 256 bytes of the disk image -- where a header ought 
+to be located. Otherwise, drive on as usual.
+
+CONTENT
+
+$00-1C Signature. "COMMODORE BUSINESS MACHINES" + $00
+
+$20 - $FF. Packed JSON Configuration. Expanded version:
+
+{ 
+	'label': '0123456789ABCDEFG',
+	'dos': '5B',
+	'id': 'ZZ',
+	'2s': false,
+	'hdr': {
+		'label': 29
+	},
+	'structure': {
+		'z0': { 't': 8, 's': 10 },
+		'z1': { 't': 8, 's': 10 },
+		'z2': { 't': 8, 's': 10 },
+		'z3': { 't': 8, 's': 10 },
+	},
+}
+
+$0100 BAM block. T/S points to 00/FF.
+$0200 First DIR Block.  Final T/S points to 00/FF.
+$0300 First Error Block.  Final T/S points to 00/FF.
+$0400 1/0
+$0500 1/1
+$0600 1/2
+etc.
