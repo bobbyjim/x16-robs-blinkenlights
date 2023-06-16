@@ -28,29 +28,71 @@
 #define KERNAL_BOTTOM           KERNAL_TOP + 8
 #define KERNAL_RIGHT            KERNAL_LEFT + 27
 
+// 01cc to 01e6 has changers
+// 037c and 037d
+
 char* labels_stack[] = {
-    "01d5", "01d6", "01d7", "01d8", "01d9", "01da", "01db", "01dc", "01dd", "01de", "01df", 
-    "01e0", "01e1", "01e2", "01e3", "01e4", "01e5", "01e6",
+    "01cc", "01cd",
+    "01ce", "01cf",
+    "01d0", "01d1",
+    "01d1", "01d2", 
+    "01d3", "01d4",
+    "01d5", "01d6", 
+    "01d7", "01d8", 
+    "01d9", "01da",
+
+    "01db", "01dc", 
+    "01dd", "01de", 
+    "01df", "01e0"
 
 };
 
-unsigned int address_stack[] = {
-    0x01d5, 0x01d6, 0x01d7, 0x01d8, 0x01d9, 0x01da, 0x01db, 0x01dc, 0x01dd, 0x01de, 0x01df, 
-    0x01e0, 0x01e1, 0x01e2, 0x01e3, 0x01e4, 0x01e5, 0x01e6,
+unsigned int address_stack[] = { // 8 pairs please
+    0x01cc, 0x01cd,
+    0x01ce, 0x01cf,
+    0x01d0, 0x01d1,
+    0x01d1, 0x01d2, 
+    0x01d3, 0x01d4, 
+    0x01d5, 0x01d6, 
+    0x01d7, 0x01d8, 
+    0x01d9, 0x01da,
+
+    0x01db, 0x01dc, 
+    0x01dd, 0x01de, 
+    0x01df, 0x01e0  
 };
 
+// 9f04-9f05, 9f08-9f09, 9f20-9f37, 9fb8-9fbb
 char* labels_io[] = {
-    "9f64", "9f65",
-    "9f66", "9f67",
-    "9f68", "9f69", 
+    "9f04", "9f05",
+    "9f08", "9f09",
+    "9f20", "9f21",
+//    "9f22", "9f23",
+//    "9f24", "9f25",
+//    "9f26", "9f27",
+    "9f28", "9f29",
+//    "9f2a", "9f2b",
+//    "9f2c", "9f2d",
+//    "9f2e", "9f2f",
+//    "9f30", "9f31",
+    "9f34", "9f35",
     "9fb8", "9fb9",
-    "9fba", "9fbb",
+    "9fba", "9fbb"
 };
 
-unsigned int address_io[] = {
-    0x9f64, 0x9f65,
-    0x9f66, 0x9f67,
-    0x9f68, 0x9f69, 
+unsigned int address_io[] = { // 5 pairs please
+    0x9f04, 0x9f05,
+    0x9f08, 0x9f09,
+    0x9f20, 0x9f21,
+//    0x9f22, 0x9f23,
+//    0x9f24, 0x9f25,
+//    0x9f26, 0x9f27,
+    0x9f28, 0x9f29,
+//    0x9f2a, 0x9f2b,
+//    0x9f2c, 0x9f2d,
+//    0x9f2e, 0x9f2f,
+//    0x9f30, 0x9f31,
+    0x9f34, 0x9f35,
     0x9fb8, 0x9fb9,
     0x9fba, 0x9fbb,
 };
@@ -93,26 +135,30 @@ void timePanel()
    LED_set(6, 2, COLOR_ORANGE, TIMEPANEL_LEFT, TIMEPANEL_TOP, elems, labels_tm);
 }
 
+#define IO_PANEL_SIZE   14
+
 void ioPanel()
 {
     unsigned char elems[10];
     unsigned char x;
 
-    for(x=0; x<10; ++x)
+    for(x=0; x<IO_PANEL_SIZE; ++x)
         elems[x] = *(unsigned char *) address_io[x];
 
-    LED_set(10, 3, COLOR_BLUE, IOPANEL_LEFT, IOPANEL_TOP, elems, labels_io);
+    LED_set(IO_PANEL_SIZE, 2, COLOR_BLUE, IOPANEL_LEFT, IOPANEL_TOP, elems, labels_io);
 }
+
+#define STACK_PANEL_SIZE    16
 
 void stackPanel()
 {
     unsigned char x;
     unsigned char elems[16];
 
-    for(x=0; x<16; ++x)
+    for(x=0; x<STACK_PANEL_SIZE; ++x)
         elems[x] = *(unsigned char *) address_stack[x];
 
-    LED_set(16, 2, COLOR_RED, STACKPANEL_LEFT, STACKPANEL_TOP, elems, labels_stack);
+    LED_set(STACK_PANEL_SIZE, 2, COLOR_RED, STACKPANEL_LEFT, STACKPANEL_TOP, elems, labels_stack);
 }
 
 void keyboard()
@@ -135,6 +181,9 @@ void keyboard()
 void status()
 {
     LED_bar( KERNAL_LEFT, KERNAL_TOP + 2, cbm_k_readst(), COLOR_YELLOW, "st" );
+    LED_bar( KERNAL_LEFT, KERNAL_TOP + 4, RAM_BANK, COLOR_GREEN, "ba" );
+    LED_bar( KERNAL_LEFT, KERNAL_TOP + 6, (unsigned)get_ostype(), COLOR_ORANGE, "v." );
+    ++RAM_BANK;
 }
 
 void main(void)
