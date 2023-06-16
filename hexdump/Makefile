@@ -1,4 +1,4 @@
-SOURCES = main.c 
+SOURCES = main.c splash.c common.c
 
 PROGRAM = HEXDUMP.PRG
 
