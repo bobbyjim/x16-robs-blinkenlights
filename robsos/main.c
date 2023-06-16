@@ -46,10 +46,6 @@ void main()
    common_loadFileAt("trap.txt", 3, 0xa000);
    common_loadFileAt("swer.txt", 3, 0xa400);
   
-   cbm_k_setnam("pet-case.bin");
-   cbm_k_setlfs(0,8,0);
-   cbm_k_load(2, 0x0f800);
-
    trk_initTrunks();
    ci_login();
 
