@@ -77,7 +77,7 @@ VolumeEntry* volumes_findEntry(char *volName, char *bootfile)
     return 0;
 }
 
-int volumes_list()
+int volumes_list(int vol)
 {
     setBank(BANK_VOLUMES);
     stringHeaders = ((VolumeStringHeaders*)(0xa000));
@@ -168,7 +168,7 @@ void volumes_listfiles(char *vol)
         ci_inputToUpper(entry.fileName, tmpname);
  
         pause();
-        printf("\n%-31s %c %c %c %c %c %c    0  %4u %9lu %7lu %ld\n",
+        printf("\n%-31s %c %c %c %c %c %c    0  %5u %8lu %7lu %ld\n",
             tmpname,
             org[ (int)entry.org ],
             rec[ (int)entry.rec ],

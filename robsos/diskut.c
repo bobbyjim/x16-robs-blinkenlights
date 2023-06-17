@@ -34,7 +34,7 @@ void diskut_run()
 {
     if ( 1 == sscanf(ciLowerBuffer, " lv %d", &i1))
     {
-        volumes_list();
+        volumes_list(i1);
     }
     ELSIF ( 1 == sscanf(ciLowerBuffer, " lf %s", c1)
          || 1 == sscanf(ciLowerBuffer, " listfl %s", c1))

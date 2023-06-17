@@ -86,7 +86,7 @@ typedef struct {
     VolumeEntry  entry[31];
 } Volume;
 
-int volumes_list();
+int volumes_list(int vol);
 void volumes_listfiles(char *vol);
 Volume* volumes_find(char *vol);
 VolumeEntry* volumes_findEntry(char *volName, char *bootfile);

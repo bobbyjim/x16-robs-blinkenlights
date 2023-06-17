@@ -1,1 +1,1 @@
-~/commanderx16/x16emu_mac-r41/x16emu -prg TEST -run -debug -scale 1
+../../x16 -prg TEST -run -debug -scale 1
