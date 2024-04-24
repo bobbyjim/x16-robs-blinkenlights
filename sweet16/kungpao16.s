@@ -8,6 +8,9 @@ R14H    =   $1f  ; status high
 R15L    =   $20  ; PC low
 R15H    =   $21  ; PC high
 
+PCLO    =   $20
+PCHI    =   $21
+
 ;
 ; I'll set up a 16-bit short stack, just for fun.
 ; I've got from $22 to $7f 
@@ -30,16 +33,16 @@ XRH     =   $52  ; extended 16 bit stack, high bytes
         STX $0703
 
         LDX #$7     ; R15 (PC) = $0700 
-        STX $21
+        STX PCHI
         LDX #$0     ; ... and now X is zero (conveniently)
-        STX $20
+        STX PCLO
 
 ;
 ;  The start address is in R15.
 ;
 ;  Fetch the instruction (zp fetch!)
 ;
-FETCH:  LDA (R15L)
+FETCH:  LDA (PCLO)
         BEQ DONE      ; 00 = PROGRAM END
         TAY           ; stash it in Y
         AND #$0F

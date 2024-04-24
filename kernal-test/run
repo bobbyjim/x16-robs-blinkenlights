@@ -1,1 +1,1 @@
-../../x16 -prg TEST -run -debug -scale 1
+../../x16 -prg TEST -run -scale 2

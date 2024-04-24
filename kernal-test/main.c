@@ -4,12 +4,9 @@
 
 void setPETFont()
 {
-   unsigned char mode = 4; // PET-like
+   // set PET font
    struct regs fontregs;
-   fontregs.a = mode;
-   fontregs.x = 0;
-   fontregs.y = 0;
-   fontregs.flags = 0;
+   fontregs.a = 4; // PET-like
    fontregs.pc = 0xff62;
    _sys(&fontregs);
 }

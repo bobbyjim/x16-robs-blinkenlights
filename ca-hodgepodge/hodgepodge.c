@@ -1,4 +1,3 @@
-
 #include <cbm.h>
 #include <conio.h>
 #include <stdlib.h>
@@ -22,57 +21,33 @@
 */
 #define		ROWS				50
 #define		COLS				80
-#define		FLIP_GRIDS			(activeGrid = 1 - activeGrid)
-#define		ACTIVE_GRID(i,j)	grid[activeGrid][i][j]
-#define		INACTIVE_GRID(i,j)	grid[1 - activeGrid][i][j]
+#define		FLIP_GRIDS			tempGrid = activeGrid; activeGrid = inactiveGrid; inactiveGrid = tempGrid;
+#define		ACTIVE_GRID(i,j)	(*(unsigned char*)(activeGrid + i + j * ROWS))
+#define		INACTIVE_GRID(i,j)	(*(unsigned char*)(inactiveGrid + i + j * ROWS))
 
 typedef unsigned char byte;
 
-byte grid[2][ROWS][COLS]; 	// this should be banked
-byte activeGrid = 0;
+unsigned activeGrid   = 0x8000; // used to be 1
+unsigned inactiveGrid = 0xa000;
+unsigned tempGrid = 0x8000;
 
-#define 	Strange_G   		13;	/* These values are explained in an issue of */
-#define		Strange_k1  		2;	/* Scientific American -- do an electonic    */
-#define		Strange_k2  		3;	/* search on "Cellular Automaton".           */
+/* These values are explained in an issue of Scientific American 
+   -- do an electonic search on "Cellular Automaton". */
+
+// For Strange_G, try 4 or 13.
+
+#define 	Strange_G   		13
+#define		Strange_G_Threshold (255-13)
+#define		Strange_k1  		2	
+#define		Strange_k2  		3	
 
 /*---------------------------------
 
  Lookup Tables for Fast Processing
 
 ----------------------------------*/
-byte aLookup[256] =			// yes, it looks silly.
-{
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  0
-};
-
-byte bLookup[256] =			// looks even sillier.
-{
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  1
-};
-
-byte colorLookup[16] =
-{
-	COLOR_BLACK, COLOR_GRAY1, COLOR_BLUE, COLOR_LIGHTBLUE, 
-	COLOR_CYAN, COLOR_GREEN, COLOR_LIGHTGREEN, COLOR_YELLOW, 
-	COLOR_ORANGE, COLOR_RED, COLOR_PINK, COLOR_PURPLE,
-	COLOR_GRAY2, COLOR_GRAY3, COLOR_WHITE
-};
+unsigned char *aLookup = ((unsigned char*)0x6000);		
+unsigned char *bLookup = ((unsigned char*)0x6100);
 
 /*---------------------------------
 
@@ -141,34 +116,41 @@ void init() {
 		  INACTIVE_GRID(i,j) = ACTIVE_GRID(i,j);
 	   }
 
+    aLookup[255] = 0;
+	bLookup[255] = 1;
+	for(i=0; i<255; ++i)
+	{
+		aLookup[i] = 1;
+		bLookup[i] = 0;
+	}
+
   	revers(1);
 }
 
 void hodgepodge() {
 
 	register byte r  = 0, c  = 0;
-	register byte A  = 0, B  = 0;
-	register byte n  = 0, s  = 0, e  = 0, w  = 0;
-	register byte n0 = 0, s0 = 0, e0 = 0, w0 = 0;
-	register byte ne = 0, nw = 0, se = 0, sw = 0;
-	register byte cur = 0;
-	register int check = 0;
+	byte A  = 0, B  = 0;
+	byte n  = 0, s  = 0, e  = 0, w  = 0;
+	byte n0 = 0, s0 = 0, e0 = 0, w0 = 0;
+	byte ne = 0, nw = 0, se = 0, sw = 0;
+	byte cur = 0;
+	int check = 0;
 
 	for(;/*ever*/;)
 	{
 		gotoxy(0,5);
-		//for(r=0; r<ROWS; ++r)
-		//   for(c=0; c<COLS; ++c)
-		//   {
-		//   }
+		for(r=0; r<ROWS; ++r)
+		   for(c=0; c<COLS; ++c)
+		   {
+   		      // draw the current character value
+			  textcolor(ACTIVE_GRID(r,c) % 16);
+		      cputc(' ');
+		   }
 
 		for(r=0; r<ROWS; ++r)
 			for(c=0; c<COLS; ++c)
 			{
-			  // draw the current character value
-			  textcolor(colorLookup[ACTIVE_GRID(r,c) % 16]);
-		      cputc(' ');
-
 			  // HodgePodge
 			  n = r==0? ROWS-1 : r-1;
 			  s = r==ROWS-1? 0 : r+1;
@@ -195,19 +177,22 @@ void hodgepodge() {
 				  A  = aLookup[n0] + aLookup[s0] + aLookup[e0] + aLookup[w0]
 				     + aLookup[ne] + aLookup[nw] + aLookup[se] + aLookup[sw];
 
-				  B  = bLookup[n0] + bLookup[s0] + bLookup[e0] + bLookup[w0]
-				     + bLookup[ne] + bLookup[nw] + bLookup[se] + bLookup[sw];
-
 				  if (cur == 0)
 				  {
-					//INACTIVE_GRID(r,c) = A/Strange_k1 + B/Strange_k2;
-					INACTIVE_GRID(r,c) = A>>1 + B/Strange_k2;
+				    B  = bLookup[n0] + bLookup[s0] + bLookup[e0] + bLookup[w0]
+				       + bLookup[ne] + bLookup[nw] + bLookup[se] + bLookup[sw];
+
+					INACTIVE_GRID(r,c) = (A >> 1) + B/Strange_k2;
 				  }
 				  else if (A)
 				  {
-					check = (ne + nw + se + nw + n0 + s0 + e0 + w0)/A;
-					check += Strange_G;
-					if (check > 255) check = 255;
+					check = (ne + nw + se + nw + n0 + s0 + e0 + w0)/A; // average value
+
+					if (check >= Strange_G_Threshold)
+						check = 255;
+					else
+						check += Strange_G;
+
 					INACTIVE_GRID(r,c) = check;
 				  }
 			  }
