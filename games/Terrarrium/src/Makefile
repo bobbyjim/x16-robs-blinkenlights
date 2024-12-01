@@ -1,4 +1,4 @@
-SOURCES = main.c debug.c  creature.c map.c timer.c
+SOURCES = main.c debug.c  creature.c food.c map.c timer.c
 
 PROGRAM = TERRARIUM
 

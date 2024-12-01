@@ -2,8 +2,8 @@
 #define _CREATURE_H_
 
 typedef struct {
-	int x, y;			// position on the grid
-	int hunger_level;
+	short x, y;			// position on the grid
+	unsigned int hunger_level;
 } Creature;
 
 void creature_move(Creature *creature);

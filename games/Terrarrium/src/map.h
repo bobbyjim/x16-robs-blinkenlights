@@ -3,10 +3,19 @@
 
 #include <cx16.h>
 
-#define MAP_ROWS  60
-#define MAP_COLS  80
-#define MAP_BANK_START 48
-#define MAP_BANK_END   63
+#include "common.h"
+
+#define MAP_ROWS  		56
+#define MAP_DISPLAY_ROW	2
+#define MAP_COLS  		80
+#define STATUS_ROW 		59
+
+// Translate to screen coords.
+#define map_display(x,y,obj)		cputcxy(x, y + MAP_DISPLAY_ROW, obj)
+#define map_update(x,y,obj)			map_display(x,y,obj)
+
+#define MAP_BANK_START 	48
+#define MAP_BANK_END   	63
 #define MAP_SIZE (MAP_ROWS * MAP_COLS)
 
 #define MAP_FOOD		0
@@ -19,10 +28,11 @@
 #define SET_MAP_BANK(bank) (RAM_BANK = (bank))
 
 // Check if the map ID is valid
-#define IS_VALID_MAP_ID(id) ((id) >= 0 && (id) < (MAP_BANK_END - MAP_BANK_START + 1))
+// WARNING!  I ASSUME id IS *** UNSIGNED ***
+#define IS_VALID_MAP_ID(id) ((id) < (MAP_BANK_END - MAP_BANK_START + 1))
 
-void map_init(int map_id);
-void map_set_cell(int map_id, int x, int y, unsigned char value);
-unsigned char map_get_cell(int map_id, int x, int y);
+void map_init(byte map_id);
+void map_set_cell(byte map_id, byte x, byte y, byte value);
+unsigned char map_get_cell(byte map_id, byte x, byte y);
 
 #endif
