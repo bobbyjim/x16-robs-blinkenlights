@@ -1,1 +1,1 @@
-../../x16 -prg HODGEPODGE.PRG -run
+../../../x16 -prg HODGEPODGE.PRG -run

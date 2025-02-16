@@ -129,7 +129,7 @@ void init() {
 
 void hodgepodge() {
 
-	register byte r  = 0, c  = 0;
+	byte r  = 0, c  = 0;
 	byte A  = 0, B  = 0;
 	byte n  = 0, s  = 0, e  = 0, w  = 0;
 	byte n0 = 0, s0 = 0, e0 = 0, w0 = 0;
@@ -152,20 +152,6 @@ void hodgepodge() {
 			for(c=0; c<COLS; ++c)
 			{
 			  // HodgePodge
-			  n = r==0? ROWS-1 : r-1;
-			  s = r==ROWS-1? 0 : r+1;
-			  e = c==COLS-1? 0 : c+1;
-			  w = c==0? COLS-1 : c-1;
-
-			  ne = ACTIVE_GRID(n,e);
-			  nw = ACTIVE_GRID(n,w);
-			  se = ACTIVE_GRID(s,e);
-			  sw = ACTIVE_GRID(s,w);
-			  n0 = ACTIVE_GRID(n,c);
-			  s0 = ACTIVE_GRID(s,c);
-			  e0 = ACTIVE_GRID(r,e);
-			  w0 = ACTIVE_GRID(r,w);
-
 			  cur = ACTIVE_GRID(r,c);
 
 			  if (cur == 255)
@@ -174,6 +160,20 @@ void hodgepodge() {
 			  }
 			  else
 			  {
+				  n = r==0? ROWS-1 : r-1;
+				  s = r==ROWS-1? 0 : r+1;
+				  e = c==COLS-1? 0 : c+1;
+				  w = c==0? COLS-1 : c-1;
+
+				  ne = ACTIVE_GRID(n,e);
+				  nw = ACTIVE_GRID(n,w);
+				  se = ACTIVE_GRID(s,e);
+				  sw = ACTIVE_GRID(s,w);
+				  n0 = ACTIVE_GRID(n,c);
+				  s0 = ACTIVE_GRID(s,c);
+				  e0 = ACTIVE_GRID(r,e);
+				  w0 = ACTIVE_GRID(r,w);
+
 				  A  = aLookup[n0] + aLookup[s0] + aLookup[e0] + aLookup[w0]
 				     + aLookup[ne] + aLookup[nw] + aLookup[se] + aLookup[sw];
 
