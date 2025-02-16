@@ -1,1 +1,1 @@
-../../x16 -prg GA.PRG -run
+../../../x16 -prg GA.PRG -scale 2 -run

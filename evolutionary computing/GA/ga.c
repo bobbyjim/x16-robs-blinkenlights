@@ -20,7 +20,7 @@ void calculate_fitness(Chromosome *chromosome) {
     unsigned char fitness = 0;
     unsigned char i;
     for (i = 0; i < CHROMOSOME_LENGTH; ++i) {
-        fitness += chromosome->genes[i];
+        fitness += (chromosome->genes[i] + i) % 4;
     }
 	chromosome->fitness = fitness;
     //return fitness;
@@ -54,16 +54,21 @@ void crossover(Chromosome *child) {
 
 char chromosomeLetter[] = { 'A', 'G', 'C', 'T' };
 
-void printTheCurrentGeneration(unsigned char generation) {
+unsigned char printTheCurrentGeneration(int generation, unsigned char least_fit_index) {
 	unsigned char i;
 
-	gotoxy(0,3);
-    printf("Generation %d:\n", generation);
+	gotoxy(0,1);
+    printf("Generation %03d:\n", generation);
     for (i = 0; i < POPULATION_SIZE; ++i) {
-		gotoxy(0,5+i);
-        printf("Chromosome %2d: ", i);
-        print_chromosome(&population[i]);
+        if (generation == 0 || least_fit_index == i) {
+		    gotoxy(0,3+i);
+            printf("Chr# %2d: ", i);
+            print_chromosome(&population[i]);
+        }
+        if (population[i].fitness < population[least_fit_index].fitness)
+            least_fit_index = i;
     }
+    return least_fit_index;
 }
 
 void print_chromosome(Chromosome *chromosome) {
@@ -72,7 +77,7 @@ void print_chromosome(Chromosome *chromosome) {
     for (i = 0; i < CHROMOSOME_LENGTH; ++i) {
         cprintf("%c", chromosomeLetter[chromosome->genes[i]]);
     }
-    cprintf("  Fitness: %u", chromosome->fitness);
+    cprintf(" F: %u", chromosome->fitness);
 }
 
 Chromosome* selectParent() {
@@ -94,10 +99,8 @@ Chromosome* selectParent() {
 
 int main() {
 	unsigned char i;
-	unsigned char generation;
-    Chromosome offspring;
-    unsigned char least_fitness;
-    int least_fit_index;
+	int generation;
+    unsigned char least_fit_index = 255;
     int tournament_size = 2;
  
     //cbm_k_bsout(0x8E); // revert to primary case
@@ -118,28 +121,19 @@ int main() {
 
     // Main loop
     for (generation = 0; generation < MAX_GENERATIONS; ++generation) {
-		printTheCurrentGeneration(generation);
+		least_fit_index = printTheCurrentGeneration(generation, least_fit_index);
 
         // Create offspring through crossover
-        crossover(&offspring);
+        crossover(&population[least_fit_index]);
 
         // Perform mutation on the offspring
-        mutate(&offspring);
+        mutate(&population[least_fit_index]);
 
         // Calculate fitness of the offspring
-        calculate_fitness(&offspring);
-
-        // Replace the least fit chromosome in the population with the offspring
-        least_fit_index = 0;
-        least_fitness = population[0].fitness;
-        for (i = 1; i < POPULATION_SIZE; ++i) {
-            if (population[i].fitness < least_fitness) {
-                least_fit_index = i;
-                least_fitness = population[i].fitness;
-            }
-        }
-        population[least_fit_index] = offspring;
+        calculate_fitness(&population[least_fit_index]);
     }
+
+    gotoxy(0,0);
 
     return 0;
 }
