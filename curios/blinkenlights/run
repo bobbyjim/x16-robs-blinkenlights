@@ -1,1 +1,1 @@
-../../x16 -prg BLINKENLIGHTS -run
+../../../x16 -prg BLINKENLIGHTS -scale 2 -run
