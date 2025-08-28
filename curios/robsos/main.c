@@ -35,7 +35,7 @@ void r39test()
 
 void main() 
 {
-   r39test();
+   //r39test();
    
    bgcolor(COLOR_BLACK);
    textcolor(COLOR_GRAY3);

@@ -93,10 +93,11 @@ void ttp_run()
       {
          ttp_post(postedClli);
       }
-/*      else if (1 == sscanf(ciLowerBuffer, "post %d", &trunknum))
+      else if (1 == sscanf(ciLowerBuffer, "next"))
       {
+         trunknum = (trunknum + 1) % TRKMEM_TRUNK_COUNT;
          ttp_post_number(trunknum);
-      }*/
+      }
       else if(!strcmp(ciLowerBuffer, "bsy"))
       {
          ttp_bsy();
@@ -180,10 +181,11 @@ void ttp_writeScreen()
    ttp_updateScreen();
 }
 
-// void ttp_post_number(int trunknum)
-// {
-//    tmptrunk = TRKMEM_TRUNK_DATA(trunknum);
- 
+void ttp_post_number(int trunknum)
+{
+   tmptrunk = trk_findByIndex(trunknum);
+   postCLLI();
+} 
 //    ttp_clear_center();
 
 //    pause();
@@ -224,6 +226,12 @@ void slow_rewrite(int x, int y, int len, char* line)
 
 void ttp_post(char* clli)
 {
+   tmptrunk = trk_findByClli(clli);
+   postCLLI();
+}
+
+void postCLLI()
+{
    char* direction;
    char* ttype;
    char* card;
@@ -236,14 +244,12 @@ void ttp_post(char* clli)
 
    ttp_updateScreen();
 
-   tmptrunk = trk_findByClli(clli);
-
 //   ttp_clear_center();
 
    if (!tmptrunk)
    {
       gotoxy(3,50);
-      printf("ERROR: CLLI %s not found.", clli);
+      printf("ERROR: trunk not found.");
       return;
    }
 

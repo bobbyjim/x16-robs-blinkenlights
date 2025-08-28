@@ -81,7 +81,7 @@ int volumes_list(int vol)
 {
     setBank(BANK_VOLUMES);
     stringHeaders = ((VolumeStringHeaders*)(0xa000));
-    volume = ((Volume*)(0xa400));
+    // volume = ((Volume*)(0xa400));
 
     pause();
     puts("\nVolumes found on the node CM:\n"

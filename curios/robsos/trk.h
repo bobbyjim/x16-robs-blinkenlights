@@ -109,5 +109,6 @@ char* trk_getStatusLabel( byte trunk );
 byte  trk_getStatus( byte trunk );
 void trk_print(Trunk* trunk);
 Trunk* trk_findByClli(char* clli);
+Trunk* trk_findByIndex(int clliIndex);
 
 #endif

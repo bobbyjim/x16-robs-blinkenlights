@@ -32,6 +32,8 @@ int ttp_readLine();
 
 void ttp_writeScreen();
 void ttp_post( char* clli );
+void ttp_post_number(int trunknum);
+void postCLLI();
 
 //void ttp_post_number(int trunknum);
 int ttp_bsy();

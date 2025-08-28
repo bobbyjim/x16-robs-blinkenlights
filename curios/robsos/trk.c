@@ -71,6 +71,14 @@ Trunk* trk_findByClli(char* clli)
    return 0;
 }
 
+Trunk* trk_findByIndex(int clliIndex)
+{
+   if(clliIndex>=TRKMEM_TRUNK_COUNT)
+      return 0;
+   setBank(BANK_TRUNKMEM);
+   return TRKMEM_TRUNK_DATA(clliIndex);
+}
+
 char* trk_getStatusLabel( byte trunk )
 {
    return status[ TRKMEM_TRUNK_STATE(trunk) ];

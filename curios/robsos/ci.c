@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <conio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -144,6 +145,8 @@ char* ci_inputToUpper(char* in, char* out)
 
 void ci_login()
 {
+    char cc;
+
     pause();    
     puts("\nInitializing cmap\n"
          "\nAttemping to connect to '.map-x25.250b.bnrrich-dms'\n");
@@ -155,7 +158,9 @@ void ci_login()
     pause_long();
     puts("\n\nEnter username and password\n"
          "\nOR   log on automatically by pressing RETURN\n");
-    fgets(ciLowerBuffer, sizeof(ciLowerBuffer), stdin);
+
+    cc = cgetc();
+    //fgets(ciLowerBuffer, sizeof(ciLowerBuffer), stdin);
     ciLowerBuffer[0] = 0; // wipe out
     _randomize();
 
