@@ -3,15 +3,10 @@
 #include <6502.h>
 #include <cbm.h>
 
-#define BANNER_LOAD_ADDR        0x400
-#define BANNER_EXEC             0x401
-
-void splashInit()
-{
-   cbm_k_setnam("banner-font-0400.bin");
-   cbm_k_setlfs(0,8,0);
-   cbm_k_load(0, 0x0400);
-}
+#define BANNER_LOAD_ADDR        0x02
+#define BANNER_EXEC             0xA000
+#define RAM_BANK_REG            0x00
+#define BANNER_RAM_BANK         1
 
 void splashBanner(char* string)
 {
@@ -21,6 +16,8 @@ void splashBanner(char* string)
    r.y = 0;
    r.flags = 0;
    r.pc = BANNER_EXEC;
+
+   POKE(RAM_BANK_REG, BANNER_RAM_BANK); // cc65 crt0 resets to bank 0; font lives in bank 1
 
    while(*string)
    {
