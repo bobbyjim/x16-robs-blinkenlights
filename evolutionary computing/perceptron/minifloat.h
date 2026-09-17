@@ -4,9 +4,9 @@
 
 typedef struct {			// 1.5.2,-28
 
-	int sign		: 1;	
-	int exponent	: 5;	
-	int significand	: 2;	
+	unsigned int sign		: 1;	
+	unsigned int exponent	: 5;	
+	unsigned int significand	: 2;	
 
 } MiniFloat;
 
@@ -18,6 +18,7 @@ typedef union {
 void testMiniFloat();
 long mf2long( MiniFloat f );
 MiniFloat long2mf( long num );
+MiniFloat mfAdd( MiniFloat a, MiniFloat b );
 MiniFloat mfMultiply( MiniFloat a, MiniFloat b );
 void mfDump( MiniFloat mf );
 

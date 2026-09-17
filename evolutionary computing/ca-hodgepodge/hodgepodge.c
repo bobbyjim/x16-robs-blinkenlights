@@ -129,29 +129,23 @@ void init() {
 
 void hodgepodge() {
 
-	byte r  = 0, c  = 0;
-	byte A  = 0, B  = 0;
-	byte n  = 0, s  = 0, e  = 0, w  = 0;
-	byte n0 = 0, s0 = 0, e0 = 0, w0 = 0;
-	byte ne = 0, nw = 0, se = 0, sw = 0;
-	byte cur = 0;
-	int check = 0;
-
+	register byte r, c;
+	register byte A, B;
+	byte n, s, e, w;
+	byte n0, s0, e0, w0;
+	byte ne, nw, se, sw;
+	register byte cur;
+	int check, sum;
+	
 	for(;/*ever*/;)
 	{
 		gotoxy(0,5);
+		
 		for(r=0; r<ROWS; ++r)
-		   for(c=0; c<COLS; ++c)
-		   {
-   		      // draw the current character value
-			  textcolor(ACTIVE_GRID(r,c) % 16);
-		      cputc(' ');
-		   }
-
-		for(r=0; r<ROWS; ++r)
+		{
 			for(c=0; c<COLS; ++c)
 			{
-			  // HodgePodge
+			  // HodgePodge - compute next state
 			  cur = ACTIVE_GRID(r,c);
 
 			  if (cur == 255)
@@ -186,7 +180,8 @@ void hodgepodge() {
 				  }
 				  else if (A)
 				  {
-					check = (ne + nw + se + nw + n0 + s0 + e0 + w0)/A; // average value
+					sum = ne + nw + se + sw + n0 + s0 + e0 + w0;
+					check = sum/A; // average value
 
 					if (check >= Strange_G_Threshold)
 						check = 255;
@@ -196,7 +191,12 @@ void hodgepodge() {
 					INACTIVE_GRID(r,c) = check;
 				  }
 			  }
+			  
+			  // Draw current state while computing
+			  textcolor(cur % 16);
+		      cputc(' ');
 		   }
+		}
 
 		FLIP_GRIDS;
 	}

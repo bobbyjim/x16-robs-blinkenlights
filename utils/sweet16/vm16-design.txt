@@ -1,0 +1,256 @@
+=================================================================
+VM16: Direct-Threaded 16-bit Mini-VM for Commander X16
+=================================================================
+
+MEMORY LAYOUT (X16 Banked RAM):
+  Main RAM (0x0000–0x9FFF):
+    - 0x0000–0x07FF: ZP, stack, game state, minimal critical code
+    - 0x0800–0x9FFF: Compiled C program (grows upward from linker)
+  
+  Banked Window (0xA000–0xBFFF, 8 KB per bank, selectable via $0000):
+    - Bank 0 (main): VM16 interpreter + shared utilities
+      - 0xA000–0xA01F: Entry point (NOPs in Bank 0, falls through to MAIN_LOOP)
+      - 0xA020–0xA800: Interpreter MAIN_LOOP, handlers, utilities (~7 KB)
+      - 0xA800–0xBFFF: Lookup tables, debug hooks, shared data (4 KB)
+    
+    - Banks 1–7: Bytecode programs, maps, dialog, encounter data
+      - 0xA000–0xA01F: Per-bank entry stub (bank switch code)
+      - 0xA100–0xBFFF: Bytecode programs, maps, etc. (7.75 KB per bank)
+
+REGISTER FILE (8 × 16-bit, stored in ZP $02–$11):
+  R0 = $02–$03  (accumulator / result)
+  R1 = $04–$05  (often base pointer / iterator)
+  R2 = $06–$07
+  R3 = $08–$09
+  R4 = $0A–$0B
+  R5 = $0C–$0D
+  R6 = $0E–$0F
+  R7 = $10–$11
+  R9 = reserved for current bank number (set by caller before JSR $A000)
+  
+  Remaining ZP ($12–$1F) available for game state, flags, etc.
+
+INSTRUCTION FORMAT:
+  All instructions are multi-byte streams in a bytecode buffer.
+  Opcode byte followed by 0–3 operand bytes.
+  VM IP points to next opcode in the stream.
+  Dispatch: fetch opcode, jump to handler, handler reads operands, returns.
+
+INSTRUCTION SET (opcode, operand bytes, description):
+
+  ──── LOAD/STORE (base + displacement) ────
+  0x10  r_dst, r_base, disp8_signed
+    LDW: Load 16-bit word from [r_base + disp8] → r_dst
+    
+  0x11  r_dst, r_base, disp8_signed
+    LDB: Load 8-bit byte from [r_base + disp8], zero-extend → r_dst low byte
+    
+  0x12  r_src, r_base, disp8_signed
+    STW: Store r_src (16-bit) to [r_base + disp8]
+    
+  0x13  r_src, r_base, disp8_signed
+    STB: Store r_src low byte to [r_base + disp8]
+
+  ──── IMMEDIATE LOAD ────
+  0x20  r_dst, imm16_LE
+    LDI: Load immediate 16-bit value → r_dst
+    (imm16 in little-endian: low byte, high byte)
+
+  ──── REGISTER OPERATIONS ────
+  0x30  r_dst, r_src
+    MOV: r_dst ← r_src
+
+  0x31  r_dst, r_src
+    ADD: r_dst ← r_dst + r_src  (set carry/overflow in status)
+    
+  0x32  r_dst, r_src
+    SUB: r_dst ← r_dst - r_src  (set carry/underflow)
+    
+  0x40  r (register to increment)
+    INC: r ← r + 1
+    
+  0x41  r (register to decrement)
+    DEC: r ← r - 1
+
+  ──── COMPARISONS ────
+  0x50  r_a, r_b
+    CMP: Compute r_a - r_b, set flags (ZF, CF for borrow), discard result
+    
+  0x51  r_a, imm16_LE
+    CMPI: Compute r_a - imm16, set flags
+    (imm16 in little-endian)
+
+  ──── BRANCHES ────
+  All branches use a signed displacement (1 byte, -128..+127).
+  Displacement is relative to the opcode address.
+  
+  0x60  disp8_signed
+    BR: Unconditional branch
+    
+  0x61  disp8_signed
+    BR_EQ: Branch if Zero flag set (result was zero)
+    
+  0x62  disp8_signed
+    BR_NE: Branch if Zero flag clear (result non-zero)
+    
+  0x63  disp8_signed
+    BR_LT: Branch if Negative/Underflow (signed <)
+    
+  0x64  disp8_signed
+    BR_GE: Branch if Negative clear (signed >=)
+    
+  0x65  disp8_signed
+    BR_CS: Branch if Carry Set (unsigned <)
+    
+  0x66  disp8_signed
+    BR_CC: Branch if Carry Clear (unsigned >=)
+
+  ──── BLOCK OPERATIONS ────
+  0x70  r_dst, r_src, r_count
+    BLKCPY: Copy r_count bytes from [r_src] to [r_dst]
+    Both r_src and r_dst are treated as 16-bit pointers.
+    
+  0x71  r_dst, imm8_value, r_count
+    BLKFILL: Fill r_count bytes at [r_dst] with imm8_value
+    (imm8 byte, r_count register)
+
+  ──── MULTIPLY HELPER ────
+  0x80  r_result, r_a, r_b
+    MUL: r_result ← (r_a_low 8-bit) × (r_b_low 8-bit)
+    Uses a 256-byte lookup table (256 values, 16-bit each).
+    Example table: MUL_TABLE[i] = (i >> 4) * (i & 0x0F)
+    Or more useful: pre-computed 8×8 products.
+
+  ──── MISCELLANEOUS ────
+  0xFE  r (register for single-step trap)
+    DEBUG: Optional single-step/trace opcode
+    Handler can log current state, useful for development.
+    
+  0xFF
+    RET: Return to 6502 code
+    Pops return address from 6502 stack and jumps.
+
+=================================================================
+ENTRY POINTS AND BANKING:
+
+Bank 0 Entry (at $A000):
+  Code: fall through to MAIN_LOOP (or BRA MAIN_LOOP)
+  Called when: running the interpreter itself or debug/utility code
+
+Banks 1–7 Entry (at $A000 in each bank):
+  Code:
+    LDA #<bank_number>   ; e.g., #3 for Bank 3
+    STA R9L
+    LDA $0000            ; read current BANK register
+    PHA                  ; save it
+    LDA #0               ; switch to Bank 0
+    STA $0000
+    JMP MAIN_LOOP        ; (now in Bank 0, MAIN_LOOP is visible)
+  
+  On RET opcode:
+    PLA                  ; restore saved bank
+    STA $0000            ; switch back to original bank
+    RTS
+
+CALLING CONVENTION:
+  From C code or main game loop:
+  1. Set R9L = bank number (0 for main interpreter, 1–7 for bytecode banks)
+  2. Set R0:R1 = bytecode start address (relative to $A000 window)
+  3. JSR $A000
+  4. On return: R0:R1 contain result (if applicable), VM_STATUS has flags
+  5. All other registers preserved (or as defined by bytecode semantics)
+
+DISPATCH MODEL (Direct-Threaded):
+
+1. VM entry at $A000 (per-bank): switch to Bank 0 if needed, jump to MAIN_LOOP.
+
+2. Main loop (at $A020 in Bank 0):
+   - Fetch opcode at (VM_IP)
+   - Index into HANDLER_TABLE with opcode × 2 (16-bit addresses)
+   - JMP to handler (not JSR; handlers themselves manage control flow)
+   - Handler reads operands from bytecode (incrementing VM_IP as needed)
+   - Handler performs operation, sets status flags
+   - JMP back to MAIN_LOOP
+   
+3. Handler skeleton:
+   HANDLER_LDI:
+     ; Assume VM_IP pointing to opcode byte
+     ; Handler already incremented VM_IP (by MAIN_LOOP)
+     ; Next byte: destination register (0–7)
+     ; Next 2 bytes: imm16 (LE)
+     
+     LDY #0
+     LDA (VM_IP),Y        ; destination register (0–7)
+     ASL                  ; × 2 (registers are 2 bytes)
+     TAX
+     
+     INY
+     LDA (VM_IP),Y        ; imm16 low byte
+     STA R0L,X
+     INY
+     LDA (VM_IP),Y        ; imm16 high byte
+     STA R0H,X
+     
+     ; Advance VM_IP by 3 bytes (r_dst + imm16_lo + imm16_hi)
+     LDA VM_IP
+     CLC
+     ADC #3
+     STA VM_IP
+     BCC MAIN_LOOP
+     INC VM_IP + 1
+     JMP MAIN_LOOP
+
+=================================================================
+HANDLER TABLE:
+  16-bit addresses of handlers, indexed by opcode × 2.
+  Opcodes 0x10–0xFF → 240 entries, ~480 bytes.
+  Unused opcodes can point to a NOP or error handler.
+
+=================================================================
+ASSEMBLY SIZE ESTIMATE:
+  - Handler dispatch skeleton: ~50 bytes
+  - 20 handlers (LDW, LDB, STW, STB, LDI, MOV, ADD, SUB, INC, DEC,
+    CMP, CMPI, BR, BR_EQ, BR_NE, BR_LT, BR_GE, BLKCPY, BLKFILL, RET)
+    at ~40–60 bytes each: ~1000 bytes
+  - Handler table: 480 bytes
+  - MUL lookup table (256 entries × 2 bytes): 512 bytes
+  - Total: ~2 KB (vs SWEET16 at 438 bytes; trade size for speed and features)
+
+=================================================================
+EXAMPLE BYTECODE PROGRAM:
+  Use-case: walk a tile map, fetch tile at (map_x, map_y), compute offset.
+  
+  Map is 32×32 tiles, 2 bytes per tile (tile_id + flags).
+  Base address in some fixed location (e.g., map data at $2000).
+  
+  Bytecode:
+    0x20 R1 0x00 0x20   ; LDI R1, $2000   (map base address)
+    0x20 R2 0x05 0x00   ; LDI R2, 5       (map_x = 5)
+    0x20 R3 0x0A 0x00   ; LDI R3, 10      (map_y = 10)
+    0x32 R2 R3          ; SUB R2, R3      (scratch: R2 -= R3, sets flags)
+    0x31 R3 0x20 0x00   ; ADD R3, 32      (R3 += 32, stride for row)
+    0x31 R1 R3          ; ADD R1, R3      (R1 = map base + (y*stride))
+    0x10 R4 R1 0x0A     ; LDW R4,[R1+10]  (fetch tile at offset +10)
+    0xFF                ; RET
+
+=================================================================
+TESTING STRATEGY:
+  1. Assemble interpreter + handler table.
+  2. Build bytecode test cases (data buffers).
+  3. Test harness: load registers, run bytecode, check results.
+  4. Coverage:
+     - Load/store (all addressing modes, boundary cases).
+     - Add/sub with carry/borrow.
+     - Branches (forward, backward, taken/not taken).
+     - Block copy/fill (aligned, unaligned, edge cases).
+     - Multiply (small values, edge cases like 255×255).
+
+=================================================================
+NEXT STEPS:
+  1. Write interpreter skeleton (dispatch, IP management).
+  2. Implement handlers one by one.
+  3. Assemble, link, and test on X16 emulator.
+  4. Build test harness (register fixtures, bytecode cases).
+  5. Extend with specialized opcodes if needed (tile fetch, etc.).
+
+=================================================================

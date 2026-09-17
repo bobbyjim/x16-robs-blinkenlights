@@ -1,4 +1,4 @@
-SOURCES = main.c perceptron.c axon.c minifloat.c
+SOURCES = main.c perceptron.c axon.c fixed.c
 PROGRAM = PERCEPT
 
 CC65_TARGET = cx16

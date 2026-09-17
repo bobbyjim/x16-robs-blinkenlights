@@ -1,1 +1,1 @@
-~/commanderx16/x16emu_mac-r41/x16emu -prg SPACEWAR -run
+../../../../x16 -prg SPACEWAR -run -scale 2

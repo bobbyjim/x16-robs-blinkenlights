@@ -1,0 +1,32 @@
+
+Sea Creatures
+
+Float in a primordial soup of varying richness.
+
+Each cell has zero or more organelles, and can add organelles according to its genetic stock.
+
+* Nucleus.  
+  Contains genes ("functional RNA or protein" and unit of heredity).  
+  Builds organelles from genes as needed.
+  - Note that some traits may follow from several genes.
+  
+* Ribosome.  Produces proteins, which keeps the cell functioning well.
+
+* Golgi apparatus.  Digester.
+
+* Cytoskeleton.  Provides support.  Armor.
+
+* Mitochondrion.  Power from glucose to ATP; signalling.
+
+* Vacuole.  Storage.  Good for metabolizing, buoyancy, enzyme storage, chemical reactions, etc.
+
+* Lysosome.  Destroyer - a vacuole with hydrolytic enzymes.  Waste disposal.
+
+* Flagellum.  Locomotion and sensory.
+
+* Chloroplast.  Traps energy from sunlight.
+
+* Capsid: the protein shell of a virus.
+
+* Receptors. Ways to bind to other things.
+
